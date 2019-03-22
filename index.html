@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8" />
+		<title>clang-wasm</title>
+		<link rel="prefetch" href="library.wasm" />
+	</head>
+	<body>
+		<h1>clang-wasm</h1>
+		<p>5! = <span id="result">?</span></p>
+
+		<script>
+			// TODO: check that the browser exports WebAssembly
+			// TODO: catch error if library fails to load
+			WebAssembly.instantiateStreaming(fetch('library.wasm'), {})
+				.then(obj => {
+					const $result = document.getElementById('result')
+					$result.innerText = obj.instance.exports.fact(5)
+				})
+		</script>
+	</body>
+</html>
