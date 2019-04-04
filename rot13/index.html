@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8" />
+		<title>WASM rot13</title>
+		<link rel="prefetch" href="library.wasm" />
+	</head>
+	<body>
+		<h1>WASM rot13</h1>
+		<p><span id="result">?</span></p>
+		<p><input type="text" id="input" value="Hello, World!" /></p>
+		<script>
+			const $result = document.getElementById('result')
+			const $input = document.getElementById('input')
+			const memory = new WebAssembly.Memory({ initial: 2 })
+			const memoryI8 = new Uint8Array(memory.buffer) // assume memory does not grow
+			const textDecoder = new TextDecoder('utf-8')
+			const textEncoder = new TextEncoder()
+			let wasm
+
+			// TODO: take in offset
+			const getString = () => textDecoder.decode(memoryI8)
+			const setString = (str) => { 
+				memoryI8.set(textEncoder.encode(str), 0)
+				memoryI8[str.length] = 0
+			}
+
+			const rot13 = (str) => {
+				// zero the buffer to get rid of old string
+				memoryI8.fill(0)
+				setString(str)
+				wasm.instance.exports.rot13(0)
+				return getString()
+			}
+
+			const update = () => {
+				if ($input.value.length <= 0) return
+				$result.innerText = rot13($input.value)
+			}
+
+			WebAssembly.instantiateStreaming(fetch('library.wasm'), { env: { memory } })
+				.then(obj => {
+					wasm = obj
+					update()
+					$input.addEventListener('input', update)
+				})
+		</script>
+	</body>
+</html>
